@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#31353a">
+
+<title>Misprint App - Mobile Version</title>
+<link rel="stylesheet" href="https://use.typekit.net/ojc1klk.css">
+<style>
+  /* Importazione Coolvetica */
+  @font-face {
+      font-family: 'Coolvetica';
+      src: url('fonts/coolvetica.woff2') format('woff2');
+      font-weight: normal;
+      font-style: normal;
+  }
+
+  :root {
+    /* Palette "Punk Serigrafia" */
+    --ink: #31353a;
+    --paper: #f6f4e6;
+    --magenta: #e73c92;
+    --acid-green: #b9ce00;
+    --punk-blue: #505099;
+    --punk-orange: #f39131;
+    
+    /* Gerarchia Tipografica */
+    --font-title: "badtyp", sans-serif;          
+    --font-cool: 'Coolvetica', sans-serif;       
+    --font-mono: 'American-Typewriter', monospace; 
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent; /* Rimuove il flash blu al tap su mobile */
+  }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    background-color: var(--ink);
+    overflow: hidden; /* Blocca lo scroll del body */
+    overscroll-behavior: none; /* Impedisce il pull-to-refresh e il bounce del browser */
+    font-family: var(--font-mono); 
+    color: var(--ink);
+  }
+
+  /* LAYOUT APP MOBILE NATIVO */
+  .app {
+    display: flex;
+    flex-direction: column;
+    width: 100vw;
+    height: 100dvh; /* Dynamic Viewport Height per ignorare le barre URL di iOS/Android */
+    background: var(--paper);
+    position: relative;
+  }
+
+  /* EFFETTO GRANA ANALOGICA GLOBALE */
+  .app::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: url('data:image/svg+xml,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)"/%3E%3C/svg%3E');
+    opacity: 0.12;
+    mix-blend-mode: multiply;
+    pointer-events: none; 
+    z-index: 9999;
+  }
+
+  /* =========================================
+     TOP NAV CON LOGO E BOTTONE LOGIN
+  ========================================= */
+  .top-bar {
+    flex-shrink: 0;
+    height: calc(60px + env(safe-area-inset-top)); /* Supporto per il notch (iPhone X+) */
+    padding-top: env(safe-area-inset-top);
+    background: var(--paper);
+    border-bottom: 3px solid var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-left: 15px;
+    padding-right: 15px;
+    position: relative;
+    z-index: 10;
+  }
+
+  .top-logo {
+    height: 30px;
+    object-fit: contain;
+  }
+
+  .profile-btn {
+    background: var(--magenta);
+    color: var(--paper);
+    border: 2px solid var(--ink);
+    font-family: var(--font-cool);
+    font-size: 16px;
+    padding: 4px 10px;
+    cursor: pointer;
+    box-shadow: 2px 2px 0 var(--ink);
+    transform: rotate(3deg);
+    letter-spacing: 1px;
+  }
+  .profile-btn:active {
+    transform: rotate(0deg) translate(2px, 2px);
+    box-shadow: 0px 0px 0 var(--ink);
+  }
+
+  /* =========================================
+     SCREENS & SCROLL NATIVO
+  ========================================= */
+  .screen {
+    flex: 1; /* Occupa tutto lo spazio rimanente tra top e bottom nav */
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch; /* Scrolling fluido nativo iOS */
+    scrollbar-width: none;
+    background-color: var(--paper);
+  }
+  .screen::-webkit-scrollbar { display: none; }
+
+  .screen-view { display: none; padding-bottom: 30px; }
+  .screen-view.active { display: block; animation: glitchIn 0.2s ease-out; }
+
+  @keyframes glitchIn {
+    0% { opacity: 0; transform: translateY(10px) skewX(2deg); }
+    100% { opacity: 1; transform: translateY(0) skewX(0); }
+  }
+
+  /* =========================================
+     BOTTOM NAV
+  ========================================= */
+  .bottom-nav {
+    flex-shrink: 0;
+    height: calc(70px + env(safe-area-inset-bottom)); /* Supporto per la home bar iOS */
+    padding-bottom: env(safe-area-inset-bottom);
+    background: var(--ink);
+    display: flex;
+    border-top: 4px solid var(--ink);
+    z-index: 100;
+  }
+
+  .nav-btn {
+    flex: 1;
+    background: var(--paper);
+    border: none;
+    border-right: 3px solid var(--ink);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: var(--ink);
+    font-family: var(--font-cool);
+    font-size: 12px;
+    letter-spacing: 1px;
+    transition: all 0.1s;
+    outline: none;
+  }
+  .nav-btn:last-child { border-right: none; }
+  
+  .nav-btn.active { 
+    background: var(--acid-green); 
+    color: var(--ink);
+    box-shadow: inset 0px 5px 0px var(--ink);
+  }
+  .nav-btn svg { width: 24px; height: 24px; stroke-width: 2; margin-bottom: 2px; }
+
+  /* =========================================
+     UI COMPONENTS GLOBALI
+  ========================================= */
+  .btn-brutal {
+    display: block;
+    width: 100%;
+    background: var(--ink);
+    color: var(--paper);
+    border: 3px solid var(--ink);
+    font-family: var(--font-cool);
+    font-size: 20px;
+    letter-spacing: 1px;
+    padding: 12px 10px;
+    text-align: center;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 6px 6px 0 var(--magenta);
+    transition: all 0.1s;
+  }
+  .btn-brutal:active {
+    transform: translate(4px, 4px);
+    box-shadow: 2px 2px 0 var(--magenta);
+  }
+
+  .brutal-input {
+    width: 100%;
+    padding: 15px;
+    margin-bottom: 15px;
+    border: 3px solid var(--ink);
+    font-family: var(--font-mono);
+    font-size: 16px; /* Evita lo zoom automatico sui campi input su iOS */
+    background: var(--paper);
+    border-radius: 0;
+    outline: none;
+    appearance: none;
+    transition: all 0.1s;
+  }
+  .brutal-input:focus {
+    border-color: var(--magenta);
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0px var(--ink);
+  }
+
+  /* =========================================
+     VIEW: HOME
+  ========================================= */
+  .home-hero {
+    background: var(--ink);
+    padding: 40px 20px;
+    border-bottom: 5px solid var(--acid-green);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .hero-logo-img {
+    width: 85%;
+    max-width: 280px;
+    filter: brightness(0) invert(1) drop-shadow(5px 5px 0px var(--magenta));
+    transform: rotate(-3deg);
+    margin-bottom: 15px;
+  }
+
+  .marquee-tape {
+    background: var(--acid-green);
+    color: var(--ink);
+    padding: 10px 0;
+    font-family: var(--font-mono);
+    font-size: 16px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    border-bottom: 4px solid var(--ink);
+  }
+  .marquee-inner {
+    display: inline-block;
+    animation: tape 10s linear infinite;
+  }
+  @keyframes tape { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+  .day-card {
+    display: flex;
+    border: 3px solid var(--ink);
+    margin: 15px;
+    box-shadow: 6px 6px 0 var(--ink);
+    background: var(--paper);
+    cursor: pointer;
+  }
+  .day-card:active { transform: translate(2px,2px); box-shadow: 3px 3px 0 var(--ink); }
+
+  .dc-badge {
+    width: 55px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-title);
+    font-size: 32px;
+    color: var(--paper);
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    border-right: 3px solid var(--ink);
+  }
+  
+  .dc-content { padding: 15px; flex: 1; }
+  .dc-title { font-family: var(--font-cool); font-size: 24px; line-height: 1; margin-bottom: 5px; letter-spacing: 1px; }
+  .dc-sub { font-family: var(--font-mono); font-size: 11px; color: #555; }
+
+  .app-location-section {
+    background: var(--ink); 
+    padding: 30px 20px; 
+    margin-top: 30px; 
+    border-top: 4px solid var(--magenta); 
+    border-bottom: 4px solid var(--magenta);
+    position: relative;
+  }
+
+  /* =========================================
+     PAGINA COMUNE: HEADER
+  ========================================= */
+  .page-header {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 20px;
+    border-bottom: 4px solid var(--magenta);
+  }
+  .page-title {
+    font-family: var(--font-title);
+    font-size: 55px;
+    line-height: 0.9;
+  }
+
+  /* =========================================
+     VIEW: LINEUP, TICKETS, SHOP
+  ========================================= */
+  .filter-tabs { display: flex; padding: 15px; gap: 10px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .f-tab { background: var(--paper); border: 3px solid var(--ink); padding: 8px 15px; font-family: var(--font-cool); font-size: 18px; white-space: nowrap; cursor: pointer; box-shadow: 4px 4px 0 var(--ink); letter-spacing: 1px; }
+  .f-tab.active { background: var(--acid-green); color: var(--ink); transform: translate(2px,2px); box-shadow: 2px 2px 0 var(--ink); }
+
+  .artist-row { padding: 15px; border-bottom: 2px dashed var(--ink); display: flex; justify-content: space-between; align-items: center; }
+  .artist-name { font-family: var(--font-cool); font-size: 26px; text-transform: uppercase; line-height: 1;}
+  .artist-stage { font-family: var(--font-mono); font-size: 11px; color: var(--magenta); font-weight: bold; margin-top: 4px; letter-spacing: 1px;}
+  .artist-time { background: var(--ink); color: var(--paper); font-family: var(--font-mono); font-size: 14px; padding: 4px 8px; font-weight: bold;}
+
+  .ticket-stub { background: var(--paper); border: 3px solid var(--ink); margin: 20px 15px; position: relative; box-shadow: 8px 8px 0 var(--magenta); }
+  .t-head { background: var(--ink); color: var(--paper); padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--ink); }
+  .t-type { font-family: var(--font-cool); font-size: 28px; line-height: 0.9; letter-spacing: 1px;}
+  .t-price { font-family: var(--font-mono); font-size: 26px; font-weight: bold; color: var(--paper); }
+  .t-body { padding: 15px; font-family: var(--font-mono); font-size: 14px; line-height: 1.6; border-bottom: 3px dashed var(--ink); }
+  .t-foot { padding: 15px; background: #eee; }
+
+  .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 15px; }
+  .merch-item { border: 3px solid var(--ink); background: var(--paper); box-shadow: 5px 5px 0 var(--ink); display: flex; flex-direction: column; transform: rotate(1deg); }
+  .merch-img { height: 120px; background: #ccc; border-bottom: 3px solid var(--ink); display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 12px; overflow: hidden; }
+  .merch-img img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(100%) contrast(120%); mix-blend-mode: multiply;}
+  .merch-info { padding: 10px; flex: 1; }
+  .merch-title { font-family: var(--font-cool); font-size: 20px; line-height: 1; margin-bottom: 5px;}
+  .merch-price { font-family: var(--font-mono); font-weight: bold; font-size: 16px; color: var(--magenta); }
+  
+  /* =========================================
+     VIEW: PROFILE / LOGIN / MY TICKET
+  ========================================= */
+  .fake-qr {
+    width: 150px;
+    height: 150px;
+    background-image: 
+      linear-gradient(45deg, var(--ink) 25%, transparent 25%, transparent 75%, var(--ink) 75%, var(--ink)), 
+      linear-gradient(45deg, var(--ink) 25%, transparent 25%, transparent 75%, var(--ink) 75%, var(--ink));
+    background-size: 20px 20px;
+    background-position: 0 0, 10px 10px;
+    border: 4px solid var(--ink);
+    margin: 20px auto;
+    padding: 10px;
+    background-color: var(--paper);
+  }
+
+  .user-badge {
+    text-align: center;
+    font-family: var(--font-mono);
+    border-bottom: 2px dashed var(--ink);
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+  }
+  .user-name {
+    font-family: var(--font-cool);
+    font-size: 32px;
+    color: var(--ink);
+    text-transform: uppercase;
+    line-height: 1;
+    margin-top: 5px;
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  
+  <div class="top-bar">
+    <div style="width: 45px;"></div> 
+    <img src="Risorsa 10@300x.png" alt="Misprint" class="top-logo" onerror="this.style.display='none';">
+    <button class="profile-btn" onclick="goTo('profile')">ID ✖</button>
+  </div>
+
+  <div class="screen" id="appScreen">
+
+    <div class="screen-view active" id="view-home">
+      
+      <div class="home-hero">
+        <img src="Risorsa 10@300x.png" alt="Misprint Festival" class="hero-logo-img" onerror="this.style.display='none';">
+        <div style="font-family:var(--font-mono); font-size: 14px; font-style: italic; color: var(--paper); margin-top: 10px;">Authenticity is grainy.</div>
+      </div>
+
+      <div class="marquee-tape">
+        <div class="marquee-inner">
+          /// DO NOT CONSUME /// ERROR 404 /// ANALOG ONLY /// NO AUTOTUNE /// DO NOT CONSUME /// ERROR 404 /// ANALOG ONLY /// NO AUTOTUNE ///
+        </div>
+      </div>
+
+      <div style="padding: 20px 15px 5px; font-family: var(--font-title); font-size: 45px; line-height: 1;">/ THE LINEUP</div>
+
+      <div class="day-card" onclick="goTo('lineup', 1)">
+        <div class="dc-badge" style="background: var(--punk-blue);">FRI</div>
+        <div class="dc-content">
+          <div class="dc-title" style="color: var(--punk-blue);">THE STATIC NOISE</div>
+          <div class="dc-sub">✖ I Cani <br>✖ Marlene Kuntz</div>
+        </div>
+      </div>
+
+      <div class="day-card" onclick="goTo('lineup', 2)" style="transform: rotate(1deg); background: var(--ink);">
+        <div class="dc-badge" style="background: var(--acid-green); color: var(--ink);">SAT</div>
+        <div class="dc-content">
+          <div class="dc-title" style="color: var(--acid-green);">FEEDBACK LOOP</div>
+          <div class="dc-sub" style="color: var(--paper);">✖ CCCP <br>✖ Verdena</div>
+        </div>
+      </div>
+
+      <div class="day-card" onclick="goTo('lineup', 3)" style="transform: rotate(-1deg);">
+        <div class="dc-badge" style="background: var(--punk-orange);">SUN</div>
+        <div class="dc-content">
+          <div class="dc-title" style="color: var(--punk-orange);">DISTORTION</div>
+          <div class="dc-sub">✖ Tre Allegri Ragazzi <br>✖ Zen Circus</div>
+        </div>
+      </div>
+      
+      <div class="app-location-section">
+        <div style="background: var(--magenta); color: var(--paper); font-family: var(--font-mono); font-size: 10px; font-weight: bold; display: inline-block; padding: 4px 8px; margin-bottom: 15px; letter-spacing: 1px;">THE VENUE</div>
+        
+        <h2 style="font-family: var(--font-title); font-size: 50px; line-height: 0.9; color: var(--paper); margin-bottom: 15px;">
+          INDUSTRIAL<br>
+          <span style="color: var(--acid-green);">CHAOS</span>
+        </h2>
+        
+        <p style="font-family: var(--font-mono); font-size: 12px; line-height: 1.5; color: #ccc; margin-bottom: 25px;">
+          Ci siamo presi l'<strong>Ex Cartiera</strong> a Roma. Una fabbrica dismessa dove il cemento, i tubi a vista e le architetture industriali diventano parte integrante della scenografia.
+        </p>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <div>
+            <strong style="font-family: var(--font-cool); font-size: 18px; color: var(--acid-green); letter-spacing: 1px; display: block; margin-bottom: 3px;">// ANALOG SOUND</strong>
+            <span style="font-family: var(--font-mono); font-size: 11px; color: #aaa;">No autotune, veri strumenti.</span>
+          </div>
+          <div>
+            <strong style="font-family: var(--font-cool); font-size: 18px; color: var(--acid-green); letter-spacing: 1px; display: block; margin-bottom: 3px;">// TACTILE VISUALS</strong>
+            <span style="font-family: var(--font-mono); font-size: 11px; color: #aaa;">Zines, screenprints.</span>
+          </div>
+          <div>
+            <strong style="font-family: var(--font-cool); font-size: 18px; color: var(--acid-green); letter-spacing: 1px; display: block; margin-bottom: 3px;">// LOCAL BREWS</strong>
+            <span style="font-family: var(--font-mono); font-size: 11px; color: #aaa;">Food Truck indipendenti.</span>
+          </div>
+          <div>
+            <strong style="font-family: var(--font-cool); font-size: 18px; color: var(--acid-green); letter-spacing: 1px; display: block; margin-bottom: 3px;">// LATE STAGE</strong>
+            <span style="font-family: var(--font-mono); font-size: 11px; color: #aaa;">Darkroom DJ all'alba.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen-view" id="view-lineup">
+      <div class="page-header" style="background: var(--paper); color: var(--ink); border-bottom: 4px solid var(--ink);">
+        <div class="page-title">SCALETTA</div>
+        <div style="font-family:var(--font-mono); font-size: 14px; font-weight: bold; color: var(--punk-blue); margin-top: 5px; letter-spacing: 1px;">/// 3 NIGHTS OF NOISE</div>
+      </div>
+
+      <div class="filter-tabs" id="dayTabs">
+        <div class="f-tab active" onclick="filterDay(0, this)">ALL</div>
+        <div class="f-tab" onclick="filterDay(1, this)">FRI 4</div>
+        <div class="f-tab" onclick="filterDay(2, this)">SAT 5</div>
+        <div class="f-tab" onclick="filterDay(3, this)">SUN 6</div>
+      </div>
+
+      <div id="artistList"></div>
+    </div>
+
+    <div class="screen-view" id="view-tickets">
+      <div class="page-header" style="background: var(--punk-blue); border-bottom-color: var(--ink);">
+        <div class="page-title">GET IN.</div>
+        <div style="font-family:var(--font-mono); font-weight: bold; font-size: 14px; letter-spacing: 1px; color: var(--ink); background: var(--acid-green); display: inline-block; padding: 4px 10px; margin-top: 5px; transform: rotate(1deg);">/// DIGITAL TICKET</div>
+      </div>
+
+      <div class="ticket-stub" style="transform: rotate(-1deg); box-shadow: 8px 8px 0 var(--ink);">
+        <div class="t-head" style="background: var(--acid-green); color: var(--ink);">
+          <div class="t-type">3-DAY PASS</div>
+          <div class="t-price" style="color: var(--ink);">€80</div>
+        </div>
+        <div class="t-body">
+          ✖ Accesso a tutti i palchi<br>
+          ✖ Zine ufficiale inclusa
+        </div>
+        <div class="t-foot">
+          <button class="btn-brutal" style="background: var(--ink); color: var(--paper);" onclick="alert('Vai alla pagina del sito per l\'acquisto.')">BUY TICKETS</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen-view" id="view-shop">
+      <div class="page-header" style="background: var(--magenta); color: var(--paper); border-bottom-color: var(--ink);">
+        <div class="page-title">MERCH FACTORY</div>
+      </div>
+
+      <div class="shop-grid">
+        <div class="merch-item">
+          <div class="merch-img" style="background: var(--paper); color: var(--ink);">[TEE IMG]</div>
+          <div class="merch-info">
+            <div class="merch-title">LOGO TEE V1.0</div>
+            <div class="merch-price">€25</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen-view" id="view-profile">
+        
+        <div id="state-login">
+            <div class="page-header" style="background: var(--ink); color: var(--paper); border-bottom-color: var(--acid-green);">
+                <div class="page-title">IDENTIFY</div>
+                <div style="font-family:var(--font-mono); font-weight: bold; font-size: 14px; color: var(--acid-green); margin-top: 5px; letter-spacing: 1px;">/// ACCESS YOUR DIGITAL PASS</div>
+            </div>
+
+            <div style="padding: 30px 20px;">
+                <label style="font-family: var(--font-mono); font-weight: bold; font-size: 16px; color: var(--ink); letter-spacing: 1px;">TICKET EMAIL</label>
+                <input type="email" id="login-email" class="brutal-input" placeholder="tua@email.com" autocapitalize="none">
+
+                <label style="font-family: var(--font-mono); font-weight: bold; font-size: 16px; color: var(--ink); margin-top: 10px; display: block; letter-spacing: 1px;">ORDER ID / PASSWORD</label>
+                <input type="password" id="login-pass" class="brutal-input" placeholder="Codice d'ordine">
+
+                <button class="btn-brutal" style="background: var(--acid-green); color: var(--ink); margin-top: 20px;" onclick="doLogin()">ENTER ➔</button>
+            </div>
+        </div>
+
+        <div id="state-myticket" style="display: none;">
+            <div class="page-header" style="background: var(--acid-green); color: var(--ink); border-bottom-color: var(--ink);">
+                <div class="page-title">YOUR PASS</div>
+            </div>
+
+            <div class="ticket-stub" style="transform: rotate(1deg); box-shadow: 10px 10px 0 var(--ink);">
+                <div class="t-head" style="background: var(--ink); color: var(--paper); justify-content: center;">
+                    <div class="t-type" style="letter-spacing: 2px;">MISPRINT 2026</div>
+                </div>
+                
+                <div style="padding: 20px; background: var(--paper);">
+                    
+                    <div class="user-badge">
+                        <div style="font-family: var(--font-mono); font-size: 14px; color: var(--magenta); font-weight: bold; letter-spacing: 1px;">TICKET HOLDER</div>
+                        <div class="user-name" id="display-name">PUNK USER</div>
+                    </div>
+
+                    <div class="fake-qr"></div>
+                    
+                    <div style="text-align: center; font-family: var(--font-cool); font-size: 30px; background: var(--punk-blue); color: var(--paper); padding: 5px; line-height: 1;">
+                        3-DAY PASS
+                    </div>
+                    <div style="text-align: center; font-family: var(--font-mono); font-size: 12px; margin-top: 10px; letter-spacing: 1px;">
+                        Scansiona questo codice ai tornelli.<br>Non valido per il rimborso.
+                    </div>
+                </div>
+            </div>
+
+            <div style="padding: 0 15px;">
+                <button class="btn-brutal" style="background: transparent; color: var(--ink); box-shadow: none; border: none; text-decoration: underline; font-size: 20px;" onclick="doLogout()">LOGOUT ✖</button>
+            </div>
+        </div>
+
+    </div>
+
+  </div>
+  
+  <div class="bottom-nav">
+    <button class="nav-btn active" id="nb-home" onclick="goTo('home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+      HOME
+    </button>
+    <button class="nav-btn" id="nb-lineup" onclick="goTo('lineup')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      LINEUP
+    </button>
+    <button class="nav-btn" id="nb-tickets" onclick="goTo('tickets')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v2z"/></svg>
+      TICKETS
+    </button>
+    <button class="nav-btn" id="nb-shop" onclick="goTo('shop')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      SHOP
+    </button>
+  </div>
+
+</div>
+
+<script>
+// --- GESTIONE ARTISTI E LINEUP ---
+const artists = [
+  {day:1, name:'I Cani', stage:'The Static Noise', time:'22:30', color:'var(--punk-blue)'},
+  {day:1, name:'Marlene Kuntz', stage:'The Static Noise', time:'20:30', color:'var(--punk-blue)'},
+  {day:2, name:'CCCP', stage:'Feedback Loop', time:'22:30', color:'var(--acid-green)'},
+  {day:2, name:'Verdena', stage:'Feedback Loop', time:'20:30', color:'var(--acid-green)'},
+  {day:3, name:'Tre Allegri Ragazzi Morti', stage:'Distortion', time:'21:30', color:'var(--punk-orange)'},
+  {day:3, name:'Zen Circus', stage:'Distortion', time:'19:30', color:'var(--punk-orange)'},
+];
+
+function renderLineup(day) {
+  const list = document.getElementById('artistList');
+  const data = day === 0 ? artists : artists.filter(a => a.day === day);
+  
+  list.innerHTML = data.map(a => `
+    <div class="artist-row">
+      <div>
+        <div class="artist-name">${a.name}</div>
+        <div class="artist-stage" style="color: ${a.color}">✖ ${a.stage}</div>
+      </div>
+      <div class="artist-time">${a.time}</div>
+    </div>
+  `).join('');
+}
+
+function filterDay(day, btn) {
+  document.querySelectorAll('.f-tab').forEach(b => b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  renderLineup(day);
+}
+
+
+function goTo(tab, preFilterDay = null) {
+  document.querySelectorAll('.screen-view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  
+  document.getElementById('view-' + tab).classList.add('active');
+  
+  if(tab !== 'profile') {
+      document.getElementById('nb-' + tab).classList.add('active');
+  }
+  
+  document.getElementById('appScreen').scrollTop = 0;
+  
+  if (tab === 'lineup') {
+    if (preFilterDay !== null) {
+      const tabs = document.querySelectorAll('.f-tab');
+      filterDay(preFilterDay, tabs[preFilterDay]);
+    } else {
+      filterDay(0, document.querySelectorAll('.f-tab')[0]);
+    }
+  }
+}
+
+
+function doLogin() {
+    const emailInput = document.getElementById('login-email').value;
+    
+    if(emailInput.trim() === "") {
+        alert("PUNK, INSERISCI ALMENO L'EMAIL.");
+        return;
+    }
+
+    const displayName = emailInput.split('@')[0].toUpperCase();
+    document.getElementById('display-name').innerText = displayName;
+
+    document.getElementById('state-login').style.display = 'none';
+    document.getElementById('state-myticket').style.display = 'block';
+}
+
+function doLogout() {
+    document.getElementById('login-email').value = '';
+    document.getElementById('login-pass').value = '';
+
+    document.getElementById('state-myticket').style.display = 'none';
+    document.getElementById('state-login').style.display = 'block';
+}
+
+// Inizializza
+renderLineup(0);
+</script>
+
+</body>
+</html>
